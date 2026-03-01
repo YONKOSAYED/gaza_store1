@@ -1,0 +1,2444 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سوق غزة - Gaza Market</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+ <div class="top-bar">
+        <div class="container flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <span id="locationText" role="button" tabindex="0" class="btn" style="background:none; border:none; color:white; padding:0; font-size:inherit; cursor:pointer;">📍 غزة، فلسطين</span>
+                <span>|</span>
+                <button id="langAr" class="lang-btn" style="background: none; border: none; color: white; cursor: pointer; font-size: inherit; padding: 0;">العربية</button>
+                <span>|</span>
+                <button id="langEn" class="lang-btn" style="background: none; border: none; color: white; cursor: pointer; font-size: inherit; padding: 0;">English</button>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="helpCenterText">مركز المساعدة</span>
+                <span>|</span>
+                <span id="sellAtText">بيع على سوق غزة</span>
+                <span>|</span>
+                <!-- Top account / login area -->
+                <div id="topAccountArea" class="flex items-center" style="position:relative;">
+                    <button id="topLoginBtn" class="btn" style="background:none; border:1px solid rgba(255,255,255,0.12); color: white; padding:0.25rem 0.5rem;">تسجيل</button>
+                    <button id="topAccountBtn" class="btn" style="display:none; background:none; border:1px solid rgba(255,255,255,0.12); color: white; padding:0.25rem 0.5rem; margin-left:0.5rem;">
+                        <span id="topAccountName">User</span> ▾
+                    </button>
+
+                    <div id="topAccountMenu" role="menu" aria-hidden="true" style="display:none; position:absolute; top:110%; right:0; background:white; color:var(--gray-900); border-radius:8px; box-shadow:var(--shadow-md); min-width:180px; overflow:hidden; z-index:2000;">
+                        <button id="paymentMethodsBtn" class="btn" style="display:block; width:100%; text-align:right; padding:0.75rem 1rem; border:none; background:transparent;">طرق الدفع</button>
+                        <button id="visaCardBtn" class="btn" style="display:block; width:100%; text-align:right; padding:0.75rem 1rem; border:none; background:transparent;">Visa</button>
+                        <hr style="margin:0; border:none; border-top:1px solid var(--gray-200);">
+                        <button id="requestMerchantBtn" class="btn" style="display:block; width:100%; text-align:right; padding:0.75rem 1rem; border:none; background:transparent; color:var(--primary);">طلب حساب تاجر</button>
+                        <button id="logoutBtnTop" class="btn" style="display:block; width:100%; text-align:right; padding:0.75rem 1rem; border:none; background:transparent; color:var(--error);">تسجيل الخروج</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Header -->
+    <header class="main-header">
+        <div class="container flex items-center">
+            <div class="logo">سوق غزة</div>
+            
+            <div class="search-container">
+                <form id="searchForm">
+                    <input type="text" id="searchInput" class="search-input" placeholder="🔍 ابحث عن منتجات، متاجر، أو فئات..." required>
+                </form>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button id="myAccountBtn" class="account-btn" style="background: none; border: none; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: inherit; font-size: inherit;">
+                    <i class="fas fa-user"></i>
+                    <span id="myAccountText">حسابي</span>
+                </button>
+                
+                <button id="favoritesBtn" class="favorites-btn" style="background: none; border: none; display: flex; align-items: center; gap: 0.5rem; cursor: pointer; color: inherit; font-size: inherit;">
+                    <i class="fas fa-heart"></i>
+                    <span id="favoritesText">المفضلة</span>
+                    <span id="favoritesCount" class="badge" style="background-color: var(--primary);">0</span>
+                </button>
+                
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cartText">السلة</span>
+                    <span id="cartBadge" class="badge" style="background-color: var(--primary);">0</span>
+                </div>
+            </div>
+        </div>
+
+                <!-- Payment Methods Modal -->
+                <div id="paymentModal" class="modal" style="display:none;">
+                    <div class="modal-overlay"></div>
+                    <div class="modal-content payment-modal">
+                        <button id="closePaymentModal" class="modal-close">×</button>
+                        <div class="modal-body">
+                            <h2 id="paymentModalTitle">طرق الدفع</h2>
+                            <div style="margin-top:1rem;">
+                                <div class="visa-card">
+                                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                                        <div>Visa</div>
+                                        <div>**** **** **** 4242</div>
+                                    </div>
+                                    <div style="margin-top:0.75rem; font-size:0.9rem; opacity:0.9;">اسم المالك: <span id="cardHolderName">-</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+
+                <!-- Map Modal -->
+                <div id="mapModal" class="modal" style="display:none;">
+                    <div class="modal-overlay" id="mapModalOverlay"></div>
+                    <div class="modal-content" style="max-width:1000px; width:95%; border-radius:12px;">
+                        <button id="closeMapModal" class="modal-close">×</button>
+                        <div class="modal-body" style="padding:0; position:relative;">
+                            <div id="map" style="height:70vh; border-radius:8px;"></div>
+                            <div id="mapLegend" style="position:absolute; top:12px; left:12px; z-index:2500; background:white; padding:10px; border-radius:8px; box-shadow:var(--shadow-md); font-size:0.9rem; direction:ltr; min-width:180px;">
+                                <div style="font-weight:700; margin-bottom:6px;">Area Status</div>
+                                <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;"><span class="swatch" data-status="planning" style="width:14px; height:14px; background:#ff7a00; display:inline-block; border-radius:3px;"></span><span>Planning (orange)</span></div>
+                                <div style="display:flex; gap:8px; align-items:center; margin-bottom:4px;"><span class="swatch" data-status="active" style="width:14px; height:14px; background:#10B981; display:inline-block; border-radius:3px;"></span><span>Active (green)</span></div>
+                                <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;"><span class="swatch" data-status="restricted" style="width:14px; height:14px; background:#ff0000; display:inline-block; border-radius:3px;"></span><span>Restricted (red)</span></div>
+                                <div style="font-weight:700; margin-top:6px;">Shadows</div>
+                                <div style="display:flex; gap:6px; align-items:center; margin-top:6px;">
+                                    <input id="shadowColor" type="color" value="#ff7a00" title="Shadow color" style="width:36px; height:28px; padding:0; border:none;">
+                                    <input id="shadowRadius" type="number" value="2000" min="50" step="50" title="Radius (meters)" style="width:80px; padding:4px;">
+                                </div>
+                                <div style="display:flex; gap:6px; margin-top:8px;">
+                                    <button id="toggleAddShadowBtn" class="btn btn-outline" style="padding:6px 8px;">Add Shadow Mode</button>
+                                    <button id="clearShadowsBtn" class="btn" style="background:#ef4444; color:white; padding:6px 8px;">Clear</button>
+                                </div>
+                                <div style="margin-top:8px; font-size:0.8rem; color:var(--gray-600);">Toggle add mode then click map to place shadows. Click a shadow to edit/remove.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-links">
+        <div class="container flex items-center">
+            <a href="#" id="navAllCategories" class="nav-link" role="button" aria-haspopup="true"><i class="fas fa-bars"></i> جميع الفئات</a>
+            <a href="#" class="nav-link">🔥 العروض</a>
+            <a href="#" class="nav-link">الأكثر مبيعاً</a>
+            <a href="#" class="nav-link">جديد</a>
+            <a href="#" class="nav-link">المتاجر</a>
+            <a href="#" class="nav-link">تواصل معنا</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section container">
+        <div class="hero-slider">
+            <div class="slide" style="background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('https://images.unsplash.com/photo-1607082350899-7e105aa886ae?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');">
+                <h2>خصومات تصل إلى 70% على الإلكترونيات</h2>
+                <p>عروض محدودة لفترة محدودة فقط</p>
+                <button class="btn btn-primary mt-3">تسوق الآن</button>
+            </div>
+        </div>
+        
+        <div class="side-banners">
+            <div class="banner">
+                عروض الأجهزة المنزلية
+            </div>
+            <div class="banner">
+                خصومات على الملابس
+            </div>
+        </div>
+    </section>
+
+    <!-- All Categories Modal -->
+    <div id="allCategoriesModal" class="modal" style="display:none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content modal-content-full">
+            <button id="closeAllCategoriesModal" class="modal-close">×</button>
+            <div class="modal-body-full">
+                <h2 id="allCategoriesTitle">تسوق حسب الفئات</h2>
+                <div id="allCategoriesGrid" class="categories-modal-grid">
+                    <!-- categories cloned here -->
+                </div>
+                <button id="closeAllCategoriesBtn" class="btn btn-outline w-100 mt-3">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Bar -->
+    <section class="container">
+        <div class="features-bar">
+            <div class="feature-card">
+                <div class="feature-icon">🚚</div>
+                <h3>توصيل سريع</h3>
+                <p>داخل غزة</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>أسعار منافسة</h3>
+                <p>أفضل العروض</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>دفع آمن</h3>
+                <p>عند الاستلام</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📞</div>
+                <h3>دعم 24/7</h3>
+                <p>خدمة العملاء</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section (hidden; categories moved to All Categories modal) -->
+    <section id="shopByCategoriesSection" class="container py-5" style="display:none;">
+        <div class="section-title">
+            <h2>تسوق حسب الفئات</h2>
+            <button id="allCategoriesBtn" class="btn btn-outline" style="font-weight:700;">عرض الكل ←</button>
+        </div>
+        
+        <div class="categories-grid">
+            <div class="category-card">
+                <div class="category-icon">📱</div>
+                <h3>إلكترونيات</h3>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">👕</div>
+                <h3>أزياء</h3>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">🏠</div>
+                <h3>منزل ومطبخ</h3>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">💄</div>
+                <h3>تجميل</h3>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">🎮</div>
+                <h3>ألعاب</h3>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">📚</div>
+                <h3>كتب</h3>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">🍎</div>
+                <h3>طعام</h3>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">👶</div>
+                <h3>أطفال</h3>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">⚽</div>
+                <h3>رياضة</h3>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">🔧</div>
+                <h3>أدوات</h3>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">💊</div>
+                <h3>صحة</h3>
+            </div>
+            <div class="category-card">
+                <div class="category-icon">🚗</div>
+                <h3>سيارات</h3>
+            </div>
+        </div>
+    </section>
+
+    <!-- Flash Deals -->
+    <section class="container py-5">
+        <div class="section-title">
+            <h2>🔥 عروض اليوم</h2>
+            <div class="countdown">⏰ ينتهي خلال: 24:00:00</div>
+        </div>
+        
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-image">
+                    <span class="badge badge-sale sale-badge">-30%</span>
+                    <div class="wishlist-btn">
+                        <i class="far fa-heart"></i>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="منتج" style="max-width: 100%; max-height: 100%;">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">سماعة بلوتوث محمولة عالية الجودة</h3>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <span>(4.2)</span>
+                    </div>
+                    <div class="product-price">
+                        ₪99 <span class="old-price">₪149</span>
+                    </div>
+                    <button class="btn btn-primary w-100">أضف للسلة</button>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <span class="badge badge-sale sale-badge">-25%</span>
+                    <div class="wishlist-btn">
+                        <i class="far fa-heart"></i>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="منتج" style="max-width: 100%; max-height: 100%;">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">ساعة ذكية مقاومة للماء</h3>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <span>(4.0)</span>
+                    </div>
+                    <div class="product-price">
+                        ₪299 <span class="old-price">₪399</span>
+                    </div>
+                    <button class="btn btn-primary w-100">أضف للسلة</button>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <span class="badge badge-sale sale-badge">-40%</span>
+                    <div class="wishlist-btn">
+                        <i class="far fa-heart"></i>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="منتج" style="max-width: 100%; max-height: 100%;">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">سماعة رأس لاسلكية بجودة عالية</h3>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <span>(4.8)</span>
+                    </div>
+                    <div class="product-price">
+                        ₪149 <span class="old-price">₪249</span>
+                    </div>
+                    <button class="btn btn-primary w-100">أضف للسلة</button>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <span class="badge badge-sale sale-badge">-15%</span>
+                    <div class="wishlist-btn">
+                        <i class="far fa-heart"></i>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="منتج" style="max-width: 100%; max-height: 100%;">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">حذاء رياضي مريح للرجال</h3>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <i class="far fa-star"></i>
+                        <span>(3.7)</span>
+                    </div>
+                    <div class="product-price">
+                        ₪199 <span class="old-price">₪235</span>
+                    </div>
+                    <button class="btn btn-primary w-100">أضف للسلة</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Best Sellers -->
+    <section class="container py-5">
+        <div class="section-title">
+            <h2>🏆 الأكثر مبيعاً</h2>
+            <a href="#">عرض الكل ←</a>
+        </div>
+        
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="wishlist-btn">
+                        <i class="far fa-heart"></i>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="منتج" style="max-width: 100%; max-height: 100%;">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">حذاء رياضي للنساء</h3>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <span>(4.5)</span>
+                    </div>
+                    <div class="product-price">
+                        ₪249
+                    </div>
+                    <button class="btn btn-primary w-100">أضف للسلة</button>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="wishlist-btn">
+                        <i class="far fa-heart"></i>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="منتج" style="max-width: 100%; max-height: 100%;">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">سماعة رأس لاسلكية</h3>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <span>(4.1)</span>
+                    </div>
+                    <div class="product-price">
+                        ₪179
+                    </div>
+                    <button class="btn btn-primary w-100">أضف للسلة</button>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="wishlist-btn">
+                        <i class="far fa-heart"></i>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="منتج" style="max-width: 100%; max-height: 100%;">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">ساعة ذكية للرجال</h3>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <span>(4.9)</span>
+                    </div>
+                    <div class="product-price">
+                        ₪399
+                    </div>
+                    <button class="btn btn-primary w-100">أضف للسلة</button>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="wishlist-btn">
+                        <i class="far fa-heart"></i>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="منتج" style="max-width: 100%; max-height: 100%;">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">سماعة بلوتوث محمولة</h3>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <i class="far fa-star"></i>
+                        <span>(4.3)</span>
+                    </div>
+                    <div class="product-price">
+                        ₪129
+                    </div>
+                    <button class="btn btn-primary w-100">أضف للسلة</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- New Arrivals -->
+    <section class="container py-5">
+        <div class="section-title">
+            <h2>✨ وصل حديثاً</h2>
+            <a href="#">عرض الكل ←</a>
+        </div>
+        
+        <div class="products-grid">
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="wishlist-btn">
+                        <i class="far fa-heart"></i>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="منتج" style="max-width: 100%; max-height: 100%;">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">حذاء جري جديد</h3>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                        <span>(4.2)</span>
+                    </div>
+                    <div class="product-price">
+                        ₪279
+                    </div>
+                    <button class="btn btn-primary w-100">أضف للسلة</button>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="wishlist-btn">
+                        <i class="far fa-heart"></i>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="منتج" style="max-width: 100%; max-height: 100%;">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">سماعة رأس بخاصية إلغاء الضوضاء</h3>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <span>(4.6)</span>
+                    </div>
+                    <div class="product-price">
+                        ₪349
+                    </div>
+                    <button class="btn btn-primary w-100">أضف للسلة</button>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="wishlist-btn">
+                        <i class="far fa-heart"></i>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="منتج" style="max-width: 100%; max-height: 100%;">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">ساعة ذكية بتصميم جديد</h3>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <span>(4.8)</span>
+                    </div>
+                    <div class="product-price">
+                        ₪449
+                    </div>
+                    <button class="btn btn-primary w-100">أضف للسلة</button>
+                </div>
+            </div>
+            
+            <div class="product-card">
+                <div class="product-image">
+                    <div class="wishlist-btn">
+                        <i class="far fa-heart"></i>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1546868871-7041f2a55e12?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80" alt="منتج" style="max-width: 100%; max-height: 100%;">
+                </div>
+                <div class="product-info">
+                    <h3 class="product-name">سماعة بلوتوث مقاومة للماء</h3>
+                    <div class="product-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star-half-alt"></i>
+                        <i class="far fa-star"></i>
+                        <span>(4.4)</span>
+                    </div>
+                    <div class="product-price">
+                        ₪159
+                    </div>
+                    <button class="btn btn-primary w-100">أضف للسلة</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Stores -->
+    <section class="container py-5">
+        <div class="section-title">
+            <h2>🏪 متاجر مميزة</h2>
+            <a href="#">عرض الكل ←</a>
+        </div>
+        
+        <div class="stores-grid">
+            <div class="store-card">
+                <div class="store-logo">📱</div>
+                <h3>متجر الإلكترونيات</h3>
+                <div class="product-rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                    <span>4.8</span>
+                </div>
+                <p>150 منتج</p>
+                <button class="btn btn-outline w-100">زيارة المتجر</button>
+            </div>
+            
+            <div class="store-card">
+                <div class="store-logo">👕</div>
+                <h3>متجر الأزياء</h3>
+                <div class="product-rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="far fa-star"></i>
+                    <span>4.6</span>
+                </div>
+                <p>89 منتج</p>
+                <button class="btn btn-outline w-100">زيارة المتجر</button>
+            </div>
+            
+            <div class="store-card">
+                <div class="store-logo">🏠</div>
+                <h3>متجر المنزل</h3>
+                <div class="product-rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <span>4.9</span>
+                </div>
+                <p>200 منتج</p>
+                <button class="btn btn-outline w-100">زيارة المتجر</button>
+            </div>
+            
+            <div class="store-card">
+                <div class="store-logo">🎮</div>
+                <h3>متجر الألعاب</h3>
+                <div class="product-rating">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star-half-alt"></i>
+                    <span>4.7</span>
+                </div>
+                <p>120 منتج</p>
+                <button class="btn btn-outline w-100">زيارة المتجر</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- App Download -->
+    <section class="container">
+        <div class="app-download">
+            <h2>📱 حمّل تطبيق سوق غزة</h2>
+            <p>تسوق بسهولة من هاتفك</p>
+            
+            <div class="app-buttons">
+                <a href="#" class="app-button">
+                    <i class="fab fa-apple"></i>
+                    App Store
+                </a>
+                <a href="#" class="app-button">
+                    <i class="fab fa-google-play"></i>
+                    Google Play
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login/Signup Modal -->
+    <div id="authModal" class="modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <button id="closeModal" class="modal-close">×</button>
+            <div class="modal-body">
+                <div id="authOptions" class="auth-options">
+                    <h2 id="authTitle">اختر خيار</h2>
+                    <button id="signupBtn" class="auth-option-btn auth-signup-btn">
+                        <i class="fas fa-user-plus"></i>
+                        <div>
+                            <h3 id="signupTitle">إنشاء حساب جديد</h3>
+                            <p id="signupDesc">لأول مرة على الموقع</p>
+                        </div>
+                    </button>
+                    <button id="loginBtn" class="auth-option-btn auth-login-btn">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <div>
+                            <h3 id="loginTitle">تسجيل الدخول</h3>
+                            <p id="loginDesc">استخدام حساب موجود</p>
+                        </div>
+                    </button>
+                </div>
+
+                <!-- Signup Form -->
+                <div id="signupForm" class="auth-form" style="display: none;">
+                    <h2 id="signupFormTitle">إنشاء حساب جديد</h2>
+                    <form>
+                        <div class="form-group">
+                            <label id="labelFullName">الاسم الكامل</label>
+                            <input type="text" id="fullName" placeholder="أدخل اسمك الكامل" required>
+                        </div>
+                        <div class="form-group">
+                            <label id="labelEmail">البريد الإلكتروني</label>
+                            <input type="email" id="signupEmail" placeholder="أدخل بريدك الإلكتروني" required>
+                        </div>
+                        <div class="form-group">
+                            <label id="labelPhone">رقم الهاتف</label>
+                            <input type="tel" id="phone" placeholder="أدخل رقم هاتفك" required>
+                        </div>
+                        <div class="form-group">
+                            <label id="labelPassword">كلمة المرور</label>
+                            <input type="password" id="signupPassword" placeholder="أدخل كلمة مرور قوية" required>
+                        </div>
+                        <div class="form-group">
+                            <label id="labelConfirmPassword">تأكيد كلمة المرور</label>
+                            <input type="password" id="confirmPassword" placeholder="أعد إدخال كلمة المرور" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="signupSubmitBtn">إنشاء الحساب</button>
+                        <button type="button" class="btn btn-outline w-100 mt-3" id="backToOptions1">← العودة</button>
+                    </form>
+                </div>
+
+                <!-- Login Form -->
+                <div id="loginForm" class="auth-form" style="display: none;">
+                    <h2 id="loginFormTitle">تسجيل الدخول</h2>
+                    <form>
+                        <div class="form-group">
+                            <label id="labelLoginEmail">البريد الإلكتروني أو رقم الهاتف</label>
+                            <input type="text" id="loginEmail" placeholder="أدخل بريدك الإلكتروني أو رقم هاتفك" required>
+                        </div>
+                        <div class="form-group">
+                            <label id="labelLoginPassword">كلمة المرور</label>
+                            <input type="password" id="loginPassword" placeholder="أدخل كلمة المرور" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100" id="loginSubmitBtn">تسجيل الدخول</button>
+                        <button type="button" class="btn btn-outline w-100 mt-3" id="backToOptions2">← العودة</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Favorites Preview Modal -->
+    <div id="favoritesModal" class="modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content favorites-modal">
+            <button id="closeFavoritesModal" class="modal-close">×</button>
+            <div class="modal-body">
+                <h2 id="favoritesModalTitle">المفضلة</h2>
+                <div id="favoritesGrid" class="favorites-grid">
+                    <!-- Favorites thumbnails will be inserted here -->
+                </div>
+                <button id="seeMoreBtn" class="btn btn-primary w-100" style="margin-top: 1.5rem;">
+                    <i class="fas fa-eye"></i> <span id="seeMoreText">عرض الكل</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full Favorites Page Modal -->
+    <div id="fullFavoritesPage" class="modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content-full">
+            <button id="closeFavoritesPage" class="modal-close">×</button>
+            <div class="modal-body-full">
+                <h2 id="fullFavoritesTitle">المفضلة</h2>
+                <div id="allFavoritesContainer" class="products-grid">
+                    <!-- All favorite products will be displayed here -->
+                </div>
+                <button id="backToPreview" class="btn btn-outline w-100" style="margin-top: 1.5rem;">
+                    <span id="backText">← العودة</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Shopping Cart Modal -->
+    <div id="cartModal" class="modal" style="display:none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content-full">
+            <button id="closeCartModal" class="modal-close">×</button>
+            <div class="modal-body-full">
+                <h2 id="cartModalTitle">السلة - Shopping Cart</h2>
+                <div id="cartItemsContainer" style="margin-top:1rem;">
+                    <!-- Cart items will be displayed here -->
+                </div>
+                <hr style="margin:2rem 0; border:none; border-top:1px solid var(--gray-200);">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:1rem 0; background:var(--gray-50); padding:1rem; border-radius:8px;">
+                    <div>
+                        <p style="font-size:0.9rem; color:var(--gray-600);">Total Selected Items: <span id="cartTotalItems">0</span></p>
+                        <p style="font-size:1.25rem; font-weight:700; color:var(--primary);">Total: <span id="cartTotalPrice">₪0</span></p>
+                    </div>
+                    <button id="checkoutBtn" class="btn btn-primary" style="padding:0.75rem 2rem;">Checkout</button>
+                </div>
+                <button id="closeCartBtn" class="btn btn-outline w-100 mt-3">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <h3 class="footer-title">سوق غزة</h3>
+                    <p>منصة التجارة الإلكترونية الرائدة في قطاع غزة توفر تجربة تسوق شاملة للبائعين والمشترين.</p>
+                    <div class="social-icons">
+                        <a href="#" class="social-icon"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="footer-title">روابط سريعة</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">الرئيسية</a></li>
+                        <li><a href="#">المتاجر</a></li>
+                        <li><a href="#">العروض</a></li>
+                        <li><a href="#">انضم كبائع</a></li>
+                        <li><a href="#">تطبيق الجوال</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="footer-title">خدمة العملاء</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">مركز المساعدة</a></li>
+                        <li><a href="#">طريقة الطلب</a></li>
+                        <li><a href="#">سياسة الإرجاع</a></li>
+                        <li><a href="#">الشحن والتوصيل</a></li>
+                        <li><a href="#">الأسئلة الشائعة</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="footer-title">تواصل معنا</h3>
+                    <ul class="footer-links">
+                        <li><i class="fas fa-map-marker-alt"></i> غزة، فلسطين</li>
+                        <li><i class="fas fa-phone"></i> 059-XXX-XXXX</li>
+                        <li><i class="fas fa-envelope"></i> info@gazamarket.ps</li>
+                    </ul>
+                    
+                    <form class="mt-3">
+                        <div class="flex">
+                            <input type="email" placeholder="بريدك الإلكتروني" style="padding: 0.5rem; border-radius: var(--radius-md) 0 0 var(--radius-md); border: none; flex: 1;">
+                            <button class="btn btn-primary" style="border-radius: 0 var(--radius-md) var(--radius-md) 0;">اشترك</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="payment-methods">
+                <div class="payment-method">Cash</div>
+                <div class="payment-method">Bank Transfer</div>
+                <div class="payment-method">JawwalPay</div>
+            </div>
+            
+            <div class="copyright">
+                © 2024 سوق غزة - جميع الحقوق محفوظة
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Comprehensive translations object
+        const translations = {
+            ar: {
+                // Top Bar
+                location: '📍 غزة، فلسطين',
+                helpCenter: 'مركز المساعدة',
+                sellAt: 'بيع على سوق غزة',
+                arabic: 'العربية',
+                english: 'English',
+                
+                // Main Header
+                logo: 'سوق غزة',
+                searchPlaceholder: '🔍 ابحث عن منتجات، متاجر، أو فئات...',
+                myAccount: 'حسابي',
+                favorites: 'المفضلة',
+                cart: 'السلة',
+                
+                // Navigation
+                allCategories: 'جميع الفئات',
+                offers: 'العروض',
+                mostSold: 'الأكثر مبيعاً',
+                newest: 'جديد',
+                stores: 'المتاجر',
+                contactUs: 'تواصل معنا',
+                
+                // Hero Section
+                heroTitle: 'خصومات تصل إلى 70% على الإلكترونيات',
+                heroSubtitle: 'عروض محدودة لفترة محدودة فقط',
+                shopNow: 'تسوق الآن',
+                appliances: 'عروض الأجهزة المنزلية',
+                clothingDeals: 'خصومات على الملابس',
+                
+                // Features
+                fastDelivery: 'توصيل سريع',
+                withinGaza: 'داخل غزة',
+                competitivePrices: 'أسعار منافسة',
+                bestOffers: 'أفضل العروض',
+                securePayment: 'دفع آمن',
+                onReceipt: 'عند الاستلام',
+                support24: 'دعم 24/7',
+                customerService: 'خدمة العملاء',
+                
+                // Categories
+                shopByCategories: 'تسوق حسب الفئات',
+                viewAll: 'عرض الكل ←',
+                electronics: 'إلكترونيات',
+                fashion: 'أزياء',
+                homeKitchen: 'منزل ومطبخ',
+                beauty: 'تجميل',
+                games: 'ألعاب',
+                books: 'كتب',
+                food: 'طعام',
+                kids: 'أطفال',
+                sports: 'رياضة',
+                tools: 'أدوات',
+                health: 'صحة',
+                cars: 'سيارات',
+                
+                // Flash Deals
+                flashDeals: '🔥 عروض اليوم',
+                endsIn: 'ينتهي خلال:',
+                
+                // Products section titles
+                bestSellers: '🏆 الأكثر مبيعاً',
+                newArrivals: '✨ وصل حديثاً',
+                featuredStores: '🏪 متاجر مميزة',
+                
+                // Button text
+                addToCart: 'أضف للسلة',
+                visitStore: 'زيارة المتجر',
+                added: '✓ تمت الإضافة',
+                
+                // App Download
+                downloadApp: '📱 حمّل تطبيق سوق غزة',
+                shopEasily: 'تسوق بسهولة من هاتفك',
+                appStore: 'App Store',
+                googlePlay: 'Google Play',
+                
+                // Footer
+                about: 'سوق غزة',
+                aboutDesc: 'منصة التجارة الإلكترونية الرائدة في قطاع غزة توفر تجربة تسوق شاملة للبائعين والمشترين.',
+                quickLinks: 'روابط سريعة',
+                home: 'الرئيسية',
+                joinSeller: 'انضم كبائع',
+                mobileApp: 'تطبيق الجوال',
+                customerService: 'خدمة العملاء',
+                helpCenter: 'مركز المساعدة',
+                orderGuide: 'طريقة الطلب',
+                returnPolicy: 'سياسة الإرجاع',
+                deliveryInfo: 'الشحن والتوصيل',
+                faq: 'الأسئلة الشائعة',
+                contactUs2: 'تواصل معنا',
+                address: 'غزة، فلسطين',
+                subscribe: 'اشترك',
+                email: 'بريدك الإلكتروني',
+                copyright: '© 2024 سوق غزة - جميع الحقوق محفوظة',
+                
+                // Auth Modal
+                chooseOption: 'اختر خيار',
+                signup: 'إنشاء حساب جديد',
+                signupDesc: 'لأول مرة على الموقع',
+                login: 'تسجيل الدخول',
+                loginDesc: 'استخدام حساب موجود',
+                fullName: 'الاسم الكامل',
+                phone: 'رقم الهاتف',
+                password: 'كلمة المرور',
+                confirmPassword: 'تأكيد كلمة المرور',
+                createAccount: 'إنشاء الحساب',
+                back: '← العودة',
+                enterFullName: 'أدخل اسمك الكامل',
+                enterEmail: 'أدخل بريدك الإلكتروني',
+                enterPhone: 'أدخل رقم هاتفك',
+                enterPassword: 'أدخل كلمة مرور قوية',
+                reEnterPassword: 'أعد إدخال كلمة المرور',
+                emailOrPhone: 'البريد الإلكتروني أو رقم الهاتف',
+                enterEmailOrPhone: 'أدخل بريدك الإلكتروني أو رقم هاتفك',
+                enterPasswordLogin: 'أدخل كلمة المرور',
+                
+                // Favorites
+                favorites: 'المفضلة',
+                seeMore: 'عرض الكل',
+                noFavorites: 'لم تضيف أي منتج للمفضلة بعد',
+                addToFavorites: 'أضف للمفضلة',
+            },
+            en: {
+                // Top Bar
+                location: '📍 Gaza, Palestine',
+                helpCenter: 'Help Center',
+                sellAt: 'Sell on Gaza Market',
+                arabic: 'العربية',
+                english: 'English',
+                
+                // Main Header
+                logo: 'Gaza Market',
+                searchPlaceholder: '🔍 Search for products, stores, or categories...',
+                myAccount: 'My Account',
+                favorites: 'Favorites',
+                cart: 'Cart',
+                
+                // Navigation
+                allCategories: 'All Categories',
+                offers: 'Offers',
+                mostSold: 'Best Sellers',
+                newest: 'New',
+                stores: 'Stores',
+                contactUs: 'Contact Us',
+                
+                // Hero Section
+                heroTitle: 'Up to 70% Discount on Electronics',
+                heroSubtitle: 'Limited offers for a limited time only',
+                shopNow: 'Shop Now',
+                appliances: 'Home Appliances Offers',
+                clothingDeals: 'Clothing Discounts',
+                
+                // Features
+                fastDelivery: 'Fast Delivery',
+                withinGaza: 'Within Gaza',
+                competitivePrices: 'Competitive Prices',
+                bestOffers: 'Best Offers',
+                securePayment: 'Secure Payment',
+                onReceipt: 'On Receipt',
+                support24: '24/7 Support',
+                customerService: 'Customer Service',
+                
+                // Categories
+                shopByCategories: 'Shop by Categories',
+                viewAll: 'View All →',
+                electronics: 'Electronics',
+                fashion: 'Fashion',
+                homeKitchen: 'Home & Kitchen',
+                beauty: 'Beauty',
+                games: 'Games',
+                books: 'Books',
+                food: 'Food',
+                kids: 'Kids',
+                sports: 'Sports',
+                tools: 'Tools',
+                health: 'Health',
+                cars: 'Cars',
+                
+                // Flash Deals
+                flashDeals: '🔥 Today\'s Deals',
+                endsIn: 'Ends in:',
+                
+                // Products section titles
+                bestSellers: '🏆 Best Sellers',
+                newArrivals: '✨ New Arrivals',
+                featuredStores: '🏪 Featured Stores',
+                
+                // Button text
+                addToCart: 'Add to Cart',
+                visitStore: 'Visit Store',
+                added: '✓ Added',
+                
+                // App Download
+                downloadApp: '📱 Download Gaza Market App',
+                shopEasily: 'Shop easily from your phone',
+                appStore: 'App Store',
+                googlePlay: 'Google Play',
+                
+                // Footer
+                about: 'Gaza Market',
+                aboutDesc: 'A leading e-commerce platform in Gaza offering a comprehensive shopping experience for buyers and sellers.',
+                quickLinks: 'Quick Links',
+                home: 'Home',
+                joinSeller: 'Join as Seller',
+                mobileApp: 'Mobile App',
+                customerService: 'Customer Service',
+                helpCenter: 'Help Center',
+                orderGuide: 'How to Order',
+                returnPolicy: 'Return Policy',
+                deliveryInfo: 'Shipping & Delivery',
+                faq: 'FAQ',
+                contactUs2: 'Contact Us',
+                address: 'Gaza, Palestine',
+                subscribe: 'Subscribe',
+                email: 'Your Email',
+                copyright: '© 2024 Gaza Market - All Rights Reserved',
+                
+                // Auth Modal
+                chooseOption: 'Choose an Option',
+                signup: 'Create Account',
+                signupDesc: 'First time on the site',
+                login: 'Log In',
+                loginDesc: 'Use existing account',
+                fullName: 'Full Name',
+                phone: 'Phone Number',
+                password: 'Password',
+                confirmPassword: 'Confirm Password',
+                createAccount: 'Create Account',
+                back: '← Back',
+                enterFullName: 'Enter your full name',
+                enterEmail: 'Enter your email address',
+                enterPhone: 'Enter your phone number',
+                enterPassword: 'Enter a strong password',
+                reEnterPassword: 'Re-enter your password',
+                emailOrPhone: 'Email or Phone Number',
+                enterEmailOrPhone: 'Enter your email or phone number',
+                enterPasswordLogin: 'Enter your password',
+                
+                // Favorites
+                favorites: 'Favorites',
+                seeMore: 'View All',
+                noFavorites: 'No favorites added yet',
+                addToFavorites: 'Add to Favorites',
+            }
+        };
+
+        // Language Switcher Function
+        function setLanguage(lang) {
+            // Save language preference
+            localStorage.setItem('preferredLanguage', lang);
+            
+            // Update HTML attributes
+            document.documentElement.lang = lang;
+            document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+            
+            // Update body direction
+            document.body.style.direction = lang === 'ar' ? 'rtl' : 'ltr';
+            document.body.style.textAlign = lang === 'ar' ? 'right' : 'left';
+            
+            // Update top bar
+            document.getElementById('locationText').textContent = translations[lang].location;
+            document.getElementById('helpCenterText').textContent = translations[lang].helpCenter;
+            document.getElementById('sellAtText').textContent = translations[lang].sellAt;
+            document.getElementById('langAr').textContent = translations[lang].arabic;
+            document.getElementById('langEn').textContent = translations[lang].english;
+            
+            // Update logo
+            document.querySelector('.logo').textContent = translations[lang].logo;
+            
+            // Update search placeholder
+            document.querySelector('.search-input').placeholder = translations[lang].searchPlaceholder;
+            
+            // Update header items (use specific IDs for reliability)
+            const myAccountTextEl = document.getElementById('myAccountText');
+            const favoritesTextEl = document.getElementById('favoritesText');
+            const cartTextEl = document.getElementById('cartText');
+            if (myAccountTextEl) myAccountTextEl.textContent = translations[lang].myAccount;
+            if (favoritesTextEl) favoritesTextEl.textContent = translations[lang].favorites;
+            if (cartTextEl) cartTextEl.textContent = translations[lang].cart;
+            
+            // Update navigation
+            const navLinks = document.querySelectorAll('.nav-link');
+            const navTexts = [
+                translations[lang].allCategories,
+                translations[lang].offers,
+                translations[lang].mostSold,
+                translations[lang].newest,
+                translations[lang].stores,
+                translations[lang].contactUs
+            ];
+            navLinks.forEach((link, index) => {
+                if (index < navTexts.length) {
+                    link.innerHTML = (index === 0 ? '<i class="fas fa-bars"></i> ' : '') + navTexts[index];
+                }
+            });
+            
+            // Update hero section (null-safe)
+            const heroH2 = document.querySelector('.hero-slider h2');
+            const heroP = document.querySelector('.hero-slider p');
+            const heroBtn = document.querySelector('.hero-slider .btn');
+            if (heroH2) heroH2.textContent = translations[lang].heroTitle;
+            if (heroP) heroP.textContent = translations[lang].heroSubtitle;
+            if (heroBtn) heroBtn.textContent = translations[lang].shopNow;
+            
+            // Update side banners
+            const banners = document.querySelectorAll('.side-banners .banner');
+            if (banners.length >= 2) {
+                banners[0].textContent = translations[lang].appliances;
+                banners[1].textContent = translations[lang].clothingDeals;
+            }
+            
+            // Update features
+            const featureCards = document.querySelectorAll('.feature-card');
+            const featureData = [
+                { title: translations[lang].fastDelivery, sub: translations[lang].withinGaza },
+                { title: translations[lang].competitivePrices, sub: translations[lang].bestOffers },
+                { title: translations[lang].securePayment, sub: translations[lang].onReceipt },
+                { title: translations[lang].support24, sub: translations[lang].customerService }
+            ];
+            featureCards.forEach((card, index) => {
+                if (featureData[index]) {
+                    const h3 = card.querySelector('h3');
+                    const p = card.querySelector('p');
+                    if (h3) h3.textContent = featureData[index].title;
+                    if (p) p.textContent = featureData[index].sub;
+                }
+            });
+            
+            // Update categories section
+            const sectionTitles = document.querySelectorAll('.section-title');
+            if (sectionTitles.length > 0) {
+                sectionTitles[0].innerHTML = `<h2>${translations[lang].shopByCategories}</h2><a href="#">${translations[lang].viewAll}</a>`;
+            }
+            
+            // Update category cards
+            const categoryCards = document.querySelectorAll('.category-card');
+            const categoryNames = [
+                translations[lang].electronics,
+                translations[lang].fashion,
+                translations[lang].homeKitchen,
+                translations[lang].beauty,
+                translations[lang].games,
+                translations[lang].books,
+                translations[lang].food,
+                translations[lang].kids,
+                translations[lang].sports,
+                translations[lang].tools,
+                translations[lang].health,
+                translations[lang].cars
+            ];
+            categoryCards.forEach((card, index) => {
+                if (categoryNames[index]) {
+                    const h3 = card.querySelector('h3');
+                    if (h3) h3.textContent = categoryNames[index];
+                }
+            });
+            
+            // Update Flash Deals section
+            const allSectionTitles = document.querySelectorAll('.section-title');
+            if (allSectionTitles.length > 1) {
+                const countdownEl = allSectionTitles[1].querySelector('.countdown');
+                const titleH2 = allSectionTitles[1].querySelector('h2');
+                if (titleH2) titleH2.textContent = translations[lang].flashDeals;
+                if (countdownEl) {
+                    const timeMatch = countdownEl.textContent.match(/\d{2}:\d{2}:\d{2}/);
+                    if (timeMatch) {
+                        countdownEl.textContent = `⏰ ${translations[lang].endsIn} ${timeMatch[0]}`;
+                    }
+                }
+            }
+
+            // Update all "Add to Cart" buttons
+            document.querySelectorAll('.btn-primary.w-100').forEach(btn => {
+                if (!btn.classList.contains('no-translate')) {
+                    btn.textContent = translations[lang].addToCart;
+                }
+            });
+            
+            // Update Best Sellers section
+            if (allSectionTitles.length > 2) {
+                const titleH2 = allSectionTitles[2].querySelector('h2');
+                if (titleH2) titleH2.textContent = translations[lang].bestSellers;
+            }
+            
+            // Update New Arrivals section
+            if (allSectionTitles.length > 3) {
+                const titleH2 = allSectionTitles[3].querySelector('h2');
+                if (titleH2) titleH2.textContent = translations[lang].newArrivals;
+            }
+            
+            // Update Featured Stores section
+            if (allSectionTitles.length > 4) {
+                const titleH2 = allSectionTitles[4].querySelector('h2');
+                if (titleH2) titleH2.textContent = translations[lang].featuredStores;
+            }
+            
+            // Update Visit Store buttons
+            document.querySelectorAll('.btn-outline.w-100').forEach(btn => {
+                btn.textContent = translations[lang].visitStore;
+            });
+            
+            // Update App Download section
+            const appSection = document.querySelector('.app-download');
+            if (appSection) {
+                const h2 = appSection.querySelector('h2');
+                const p = appSection.querySelector('p');
+                const buttons = appSection.querySelectorAll('.app-button');
+                if (h2) h2.textContent = translations[lang].downloadApp;
+                if (p) p.textContent = translations[lang].shopEasily;
+                if (buttons.length >= 2) {
+                    buttons[0].textContent = translations[lang].appStore;
+                    buttons[1].textContent = translations[lang].googlePlay;
+                }
+            }
+            
+            // Update Footer
+            const footerTitles = document.querySelectorAll('.footer-title');
+            const footerTexts = [
+                translations[lang].about,
+                translations[lang].quickLinks,
+                translations[lang].customerService,
+                translations[lang].contactUs2
+            ];
+            footerTitles.forEach((title, index) => {
+                if (footerTexts[index]) {
+                    title.textContent = footerTexts[index];
+                }
+            });
+            
+            // Update footer links and content
+            const footerSections = document.querySelectorAll('.footer-grid > div');
+            if (footerSections.length > 0) {
+                const p = footerSections[0].querySelector('p');
+                if (p) p.textContent = translations[lang].aboutDesc;
+            }
+            
+            // Update footer link lists
+            const footerLists = document.querySelectorAll('.footer-links');
+            if (footerLists.length > 0) {
+                const links = footerLists[0].querySelectorAll('li a');
+                const quickLinkTexts = [
+                    translations[lang].home,
+                    translations[lang].stores,
+                    translations[lang].offers,
+                    translations[lang].joinSeller,
+                    translations[lang].mobileApp
+                ];
+                links.forEach((link, index) => {
+                    if (quickLinkTexts[index]) link.textContent = quickLinkTexts[index];
+                });
+            }
+            
+            if (footerLists.length > 1) {
+                const links = footerLists[1].querySelectorAll('li a');
+                const serviceLinkTexts = [
+                    translations[lang].helpCenter,
+                    translations[lang].orderGuide,
+                    translations[lang].returnPolicy,
+                    translations[lang].deliveryInfo,
+                    translations[lang].faq
+                ];
+                links.forEach((link, index) => {
+                    if (serviceLinkTexts[index]) link.textContent = serviceLinkTexts[index];
+                });
+            }
+            
+            // Update contact form
+            const emailInput = document.querySelector('input[type="email"]');
+            const subscribeBtn = document.querySelector('.footer-grid form .btn');
+            if (emailInput) emailInput.placeholder = translations[lang].email;
+            if (subscribeBtn) subscribeBtn.textContent = translations[lang].subscribe;
+            
+            // Update copyright
+            const copyright = document.querySelector('.copyright');
+            if (copyright) copyright.textContent = translations[lang].copyright;
+            
+            // Update language button styles to show active language
+            const langBtns = document.querySelectorAll('.lang-btn');
+            langBtns.forEach(btn => {
+                if ((lang === 'ar' && btn.id === 'langAr') || (lang === 'en' && btn.id === 'langEn')) {
+                    btn.style.fontWeight = 'bold';
+                    btn.style.textDecoration = 'underline';
+                } else {
+                    btn.style.fontWeight = 'normal';
+                    btn.style.textDecoration = 'none';
+                }
+            });
+            
+            // Update Auth Modal Text
+            const authTitle = document.getElementById('authTitle');
+            const signupTitle = document.getElementById('signupTitle');
+            const signupDesc = document.getElementById('signupDesc');
+            const loginTitle = document.getElementById('loginTitle');
+            const loginDesc = document.getElementById('loginDesc');
+            const signupFormTitle = document.getElementById('signupFormTitle');
+            const loginFormTitle = document.getElementById('loginFormTitle');
+            const labelFullName = document.getElementById('labelFullName');
+            const labelEmail = document.getElementById('labelEmail');
+            const labelPhone = document.getElementById('labelPhone');
+            const labelPassword = document.getElementById('labelPassword');
+            const labelConfirmPassword = document.getElementById('labelConfirmPassword');
+            const signupSubmitBtn = document.getElementById('signupSubmitBtn');
+            const backToOptions1 = document.getElementById('backToOptions1');
+            const backToOptions2 = document.getElementById('backToOptions2');
+            const labelLoginEmail = document.getElementById('labelLoginEmail');
+            const labelLoginPassword = document.getElementById('labelLoginPassword');
+            const loginSubmitBtn = document.getElementById('loginSubmitBtn');
+            
+            if (authTitle) authTitle.textContent = translations[lang].chooseOption;
+            if (signupTitle) signupTitle.textContent = translations[lang].signup;
+            if (signupDesc) signupDesc.textContent = translations[lang].signupDesc;
+            if (loginTitle) loginTitle.textContent = translations[lang].login;
+            if (loginDesc) loginDesc.textContent = translations[lang].loginDesc;
+            if (signupFormTitle) signupFormTitle.textContent = translations[lang].signup;
+            if (loginFormTitle) loginFormTitle.textContent = translations[lang].login;
+            if (labelFullName) labelFullName.textContent = translations[lang].fullName;
+            if (labelEmail) labelEmail.textContent = translations[lang].email;
+            if (labelPhone) labelPhone.textContent = translations[lang].phone;
+            if (labelPassword) labelPassword.textContent = translations[lang].password;
+            if (labelConfirmPassword) labelConfirmPassword.textContent = translations[lang].confirmPassword;
+            if (signupSubmitBtn) signupSubmitBtn.textContent = translations[lang].createAccount;
+            if (backToOptions1) backToOptions1.textContent = translations[lang].back;
+            if (backToOptions2) backToOptions2.textContent = translations[lang].back;
+            if (labelLoginEmail) labelLoginEmail.textContent = translations[lang].emailOrPhone;
+            if (labelLoginPassword) labelLoginPassword.textContent = translations[lang].password;
+            if (loginSubmitBtn) loginSubmitBtn.textContent = translations[lang].login;
+            
+            // Update placeholder texts
+            document.getElementById('fullName') && (document.getElementById('fullName').placeholder = translations[lang].enterFullName);
+            document.getElementById('signupEmail') && (document.getElementById('signupEmail').placeholder = translations[lang].enterEmail);
+            document.getElementById('phone') && (document.getElementById('phone').placeholder = translations[lang].enterPhone);
+            document.getElementById('signupPassword') && (document.getElementById('signupPassword').placeholder = translations[lang].enterPassword);
+            document.getElementById('confirmPassword') && (document.getElementById('confirmPassword').placeholder = translations[lang].reEnterPassword);
+            document.getElementById('loginEmail') && (document.getElementById('loginEmail').placeholder = translations[lang].enterEmailOrPhone);
+            document.getElementById('loginPassword') && (document.getElementById('loginPassword').placeholder = translations[lang].enterPasswordLogin);
+            
+            // Update Favorites text
+            const favoritesText = document.getElementById('favoritesText');
+            const favoritesModalTitle = document.getElementById('favoritesModalTitle');
+            const seeMoreBtn = document.getElementById('seeMoreText');
+            const fullFavoritesTitle = document.getElementById('fullFavoritesTitle');
+            const backText = document.getElementById('backText');
+            
+            if (favoritesText) favoritesText.textContent = translations[lang].favorites;
+            if (favoritesModalTitle) favoritesModalTitle.textContent = translations[lang].favorites;
+            if (seeMoreBtn) seeMoreBtn.textContent = translations[lang].seeMore;
+            if (fullFavoritesTitle) fullFavoritesTitle.textContent = translations[lang].favorites;
+            if (backText) backText.textContent = translations[lang].back;
+
+            // Add ARIA labels to wishlist buttons for accessibility
+            document.querySelectorAll('.wishlist-btn').forEach(btn => {
+                try {
+                    btn.setAttribute('aria-label', translations[lang].addToFavorites || 'Add to favorites');
+                } catch (e) {
+                    // ignore if element cannot be updated
+                }
+            });
+        }
+
+        // Initialize language on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get stored language preference or default to Arabic
+            const savedLang = localStorage.getItem('preferredLanguage') || 'ar';
+            setLanguage(savedLang);
+            
+            // Add language button listeners (guarded)
+            const langArBtn = document.getElementById('langAr');
+            const langEnBtn = document.getElementById('langEn');
+            if (langArBtn) langArBtn.addEventListener('click', () => setLanguage('ar'));
+            if (langEnBtn) langEnBtn.addEventListener('click', () => setLanguage('en'));
+            
+            // Modal Event Listeners
+            const authModal = document.getElementById('authModal');
+            const myAccountBtn = document.getElementById('myAccountBtn');
+            const closeModal = document.getElementById('closeModal');
+            const signupBtn = document.getElementById('signupBtn');
+            const loginBtn = document.getElementById('loginBtn');
+            const authOptions = document.getElementById('authOptions');
+            const signupForm = document.getElementById('signupForm');
+            const loginForm = document.getElementById('loginForm');
+            const backToOptions1 = document.getElementById('backToOptions1');
+            const backToOptions2 = document.getElementById('backToOptions2');
+            
+            // Open modal when clicking My Account (guarded)
+            if (myAccountBtn) {
+                myAccountBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (authModal) {
+                        authModal.style.display = 'block';
+                        authOptions.style.display = 'block';
+                        signupForm.style.display = 'none';
+                        loginForm.style.display = 'none';
+                    }
+                });
+            }
+            
+            // Close modal when clicking the close button (guarded)
+            if (closeModal) {
+                closeModal.addEventListener('click', function() {
+                    if (authModal) authModal.style.display = 'none';
+                });
+            }
+
+            // Close modal when clicking outside of it (guarded)
+            if (authModal) {
+                authModal.addEventListener('click', function(e) {
+                    if (e.target === authModal) {
+                        authModal.style.display = 'none';
+                    }
+                });
+            }
+            
+            // Show signup form
+            signupBtn.addEventListener('click', function() {
+                authOptions.style.display = 'none';
+                signupForm.style.display = 'block';
+                loginForm.style.display = 'none';
+            });
+            
+            // Show login form
+            loginBtn.addEventListener('click', function() {
+                authOptions.style.display = 'none';
+                signupForm.style.display = 'none';
+                loginForm.style.display = 'block';
+            });
+            
+            // Back to options from signup
+            backToOptions1.addEventListener('click', function(e) {
+                e.preventDefault();
+                authOptions.style.display = 'block';
+                signupForm.style.display = 'none';
+                loginForm.style.display = 'none';
+            });
+            
+            // Back to options from login
+            backToOptions2.addEventListener('click', function(e) {
+                e.preventDefault();
+                authOptions.style.display = 'block';
+                signupForm.style.display = 'none';
+                loginForm.style.display = 'none';
+            });
+            
+            // Handle signup form submission
+            document.querySelector('#signupForm form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const fullName = document.getElementById('fullName').value;
+                const email = document.getElementById('signupEmail').value;
+                const phone = document.getElementById('phone').value;
+                const password = document.getElementById('signupPassword').value;
+                const confirmPassword = document.getElementById('confirmPassword').value;
+                
+                if (password !== confirmPassword) {
+                    alert('Passwords do not match!');
+                    return;
+                }
+                
+                // Simulate signup (in real app, send to server)
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userName', fullName || email || 'User');
+                // Optionally store a placeholder card holder name for demo
+                localStorage.setItem('cardHolderName', fullName || 'Card Holder');
+                alert('Account created successfully! Welcome ' + (fullName || 'User'));
+                if (authModal) authModal.style.display = 'none';
+                updateAuthUI();
+                // Reset form
+                this.reset();
+            });
+            
+            // Handle login form submission
+            document.querySelector('#loginForm form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+                
+                // Simulate login (in real app, send to server)
+                localStorage.setItem('isLoggedIn', 'true');
+                // store a simple username derived from email for demo
+                const derivedName = (email && email.split('@')[0]) || 'User';
+                localStorage.setItem('userName', derivedName);
+                // placeholder card holder
+                localStorage.setItem('cardHolderName', derivedName);
+                alert('Logged in successfully!');
+                if (authModal) authModal.style.display = 'none';
+                updateAuthUI();
+                // Reset form
+                this.reset();
+            });
+            
+            // Initialize Favorites System
+            let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+            
+            function updateFavoritesCount() {
+                document.getElementById('favoritesCount').textContent = favorites.length;
+            }
+            
+            function addToFavorites(productCard) {
+                const productName = productCard.querySelector('.product-name')?.textContent || 'Product';
+                const productPrice = productCard.querySelector('.product-price')?.textContent || '₪0';
+                const productImage = productCard.querySelector('img')?.src || '';
+                
+                const favorite = {
+                    id: Date.now(),
+                    name: productName,
+                    price: productPrice,
+                    image: productImage
+                };
+                
+                const existingIndex = favorites.findIndex(f => f.name === productName);
+                if (existingIndex === -1) {
+                    favorites.push(favorite);
+                }
+                
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                updateFavoritesCount();
+            }
+            
+            function removeFromFavorites(productName) {
+                favorites = favorites.filter(f => f.name !== productName);
+                localStorage.setItem('favorites', JSON.stringify(favorites));
+                updateFavoritesCount();
+            }
+            
+            function isFavorited(productName) {
+                return favorites.some(f => f.name === productName);
+            }
+            
+            updateFavoritesCount();
+            
+            // Wishlist toggle with favorites tracking
+            const wishlistButtons = document.querySelectorAll('.wishlist-btn');
+            
+            function showLoginPrompt(){
+                const lang = localStorage.getItem('preferredLanguage') || 'ar';
+                if(lang === 'ar'){
+                    alert('يتطلب هذا الإجراء تسجيل الدخول. يمكنك إنشاء حساب ثم المحاولة.');
+                } else {
+                    alert('This requires an account. Please create an account or log in to continue.');
+                }
+                try{
+                    if (authModal) { authModal.style.display = 'block'; authOptions.style.display = 'block'; signupForm.style.display = 'none'; loginForm.style.display = 'none'; }
+                }catch(e){}
+            }
+            wishlistButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+                    if(!isLoggedIn){ showLoginPrompt(); return; }
+                    const icon = this.querySelector('i');
+                    const productCard = this.closest('.product-card');
+                    const productName = productCard.querySelector('.product-name')?.textContent || '';
+                    
+                    if (icon.classList.contains('far')) {
+                        icon.classList.remove('far');
+                        icon.classList.add('fas');
+                        this.style.color = '#FF6B35';
+                        addToFavorites(productCard);
+                    } else {
+                        icon.classList.remove('fas');
+                        icon.classList.add('far');
+                        this.style.color = '';
+                        removeFromFavorites(productName);
+                    }
+                });
+            });
+            
+            // Favorites Modal Functionality
+            const favoritesBtn = document.getElementById('favoritesBtn');
+            const favoritesModal = document.getElementById('favoritesModal');
+            const closeFavoritesModal = document.getElementById('closeFavoritesModal');
+            const seeMoreBtn = document.getElementById('seeMoreBtn');
+            const fullFavoritesPage = document.getElementById('fullFavoritesPage');
+            const closeFavoritesPage = document.getElementById('closeFavoritesPage');
+            const backToPreview = document.getElementById('backToPreview');
+            
+            function displayFavoritesPreview() {
+                const favoritesGrid = document.getElementById('favoritesGrid');
+                favoritesGrid.innerHTML = '';
+                
+                if (favorites.length === 0) {
+                    favoritesGrid.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--gray-500);">${translations[localStorage.getItem('preferredLanguage') || 'ar'].noFavorites}</p>`;
+                    return;
+                }
+                
+                // Show first 6 favorites as thumbnails
+                const previewFavorites = favorites.slice(0, 6);
+                previewFavorites.forEach(fav => {
+                    const thumbnail = document.createElement('div');
+                    thumbnail.className = 'favorites-thumbnail';
+                    thumbnail.innerHTML = `
+                        <div class="favorites-image">
+                            <img src="${fav.image}" alt="${fav.name}">
+                        </div>
+                        <div class="favorites-info">
+                            <div class="favorites-name">${fav.name}</div>
+                            <div class="favorites-price">${fav.price}</div>
+                        </div>
+                    `;
+                    favoritesGrid.appendChild(thumbnail);
+                });
+            }
+            
+            function displayFullFavorites() {
+                const allFavoritesContainer = document.getElementById('allFavoritesContainer');
+                allFavoritesContainer.innerHTML = '';
+                
+                if (favorites.length === 0) {
+                    allFavoritesContainer.innerHTML = `<p style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--gray-500);">${translations[localStorage.getItem('preferredLanguage') || 'ar'].noFavorites}</p>`;
+                    return;
+                }
+                
+                favorites.forEach(fav => {
+                    const productCard = document.createElement('div');
+                    productCard.className = 'product-card';
+                    productCard.innerHTML = `
+                        <div class="product-image">
+                            <img src="${fav.image}" alt="${fav.name}" style="max-width: 100%; max-height: 100%;">
+                        </div>
+                        <div class="product-info">
+                            <h3 class="product-name">${fav.name}</h3>
+                            <div class="product-price">${fav.price}</div>
+                            <button class="btn btn-primary w-100 remove-favorite" data-name="${fav.name}">Remove from Favorites</button>
+                        </div>
+                    `;
+                    allFavoritesContainer.appendChild(productCard);
+                });
+                
+                // Add remove functionality
+                document.querySelectorAll('.remove-favorite').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        removeFromFavorites(this.getAttribute('data-name'));
+                        displayFullFavorites();
+                    });
+                });
+            }
+            
+            // Event listeners
+            favoritesBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                var isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+                if(!isLoggedIn){ showLoginPrompt(); return; }
+                displayFavoritesPreview();
+                favoritesModal.style.display = 'block';
+            });
+
+            // All Categories modal: clone category cards into modal grid
+            const allCategoriesBtn = document.getElementById('allCategoriesBtn');
+            const allCategoriesModal = document.getElementById('allCategoriesModal');
+            const closeAllCategoriesModal = document.getElementById('closeAllCategoriesModal');
+            const closeAllCategoriesBtn = document.getElementById('closeAllCategoriesBtn');
+            const allCategoriesGrid = document.getElementById('allCategoriesGrid');
+
+            function populateAllCategories() {
+                if (!allCategoriesGrid) return;
+                allCategoriesGrid.innerHTML = '';
+                const categoryCards = document.querySelectorAll('.category-card');
+                categoryCards.forEach(card => {
+                    const clone = card.cloneNode(true);
+                    clone.style.cursor = 'pointer';
+                    allCategoriesGrid.appendChild(clone);
+                });
+            }
+
+            if (allCategoriesBtn) {
+                allCategoriesBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    populateAllCategories();
+                    if (allCategoriesModal) allCategoriesModal.style.display = 'block';
+                });
+            }
+
+            // Also allow the orange ribbon nav item to open the All Categories modal
+            const navAllCategories = document.getElementById('navAllCategories');
+            if (navAllCategories) {
+                navAllCategories.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    populateAllCategories();
+                    if (allCategoriesModal) allCategoriesModal.style.display = 'block';
+                });
+            }
+
+            if (closeAllCategoriesModal) closeAllCategoriesModal.addEventListener('click', function() { if (allCategoriesModal) allCategoriesModal.style.display = 'none'; });
+            if (closeAllCategoriesBtn) closeAllCategoriesBtn.addEventListener('click', function(e) { e.preventDefault(); if (allCategoriesModal) allCategoriesModal.style.display = 'none'; });
+            if (allCategoriesModal) allCategoriesModal.addEventListener('click', function(e) { if (e.target === allCategoriesModal) allCategoriesModal.style.display = 'none'; });
+            
+            closeFavoritesModal.addEventListener('click', function() {
+                favoritesModal.style.display = 'none';
+            });
+            
+            closeFavoritesPage.addEventListener('click', function() {
+                fullFavoritesPage.style.display = 'none';
+            });
+            
+            favoritesModal.addEventListener('click', function(e) {
+                if (e.target === favoritesModal) {
+                    favoritesModal.style.display = 'none';
+                }
+            });
+            
+            fullFavoritesPage.addEventListener('click', function(e) {
+                if (e.target === fullFavoritesPage) {
+                    fullFavoritesPage.style.display = 'none';
+                }
+            });
+            
+            seeMoreBtn.addEventListener('click', function() {
+                favoritesModal.style.display = 'none';
+                displayFullFavorites();
+                fullFavoritesPage.style.display = 'block';
+            });
+            
+            backToPreview.addEventListener('click', function(e) {
+                e.preventDefault();
+                fullFavoritesPage.style.display = 'none';
+                displayFavoritesPreview();
+                favoritesModal.style.display = 'block';
+            });
+            
+                        const addToCartButtons = document.querySelectorAll('.btn-primary.w-100');
+            addToCartButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    var isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+                    if(!isLoggedIn){ showLoginPrompt(); return; }
+                    const savedLang = localStorage.getItem('preferredLanguage') || 'ar';
+                    const originalText = button.textContent;
+                    button.textContent = translations[savedLang].added;
+                    button.style.backgroundColor = '#10B981';
+                    button.classList.add('no-translate');
+                    
+                    // Add product to cart
+                    const productCard = button.closest('.product-card');
+                    if (productCard) {
+                        const productName = productCard.querySelector('.product-name')?.textContent || 'Product';
+                        // Get only the current price (first element in product-price)
+                        const priceEl = productCard.querySelector('.product-price');
+                        let productPrice = '₪0';
+                        if (priceEl) {
+                            // Get only the text node (price), not children
+                            const priceText = priceEl.childNodes[0]?.textContent || priceEl.textContent;
+                            productPrice = priceText.trim().split(' ')[0]; // Get first part (current price only)
+                        }
+                        const productImage = productCard.querySelector('img')?.src || '';
+                        
+                        addToCart({
+                            id: Date.now(),
+                            name: productName,
+                            price: productPrice,
+                            image: productImage,
+                            quantity: 1
+                        });
+                    }
+                    
+                    setTimeout(() => {
+                        button.textContent = translations[savedLang].addToCart;
+                        button.style.backgroundColor = '';
+                        button.classList.remove('no-translate');
+                    }, 2000);
+                });
+            });
+
+            // --- Account / Payment UI logic ---
+            function updateAuthUI() {
+                const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+                const userName = localStorage.getItem('userName') || '';
+                const topLoginBtn = document.getElementById('topLoginBtn');
+                const topAccountBtn = document.getElementById('topAccountBtn');
+                const topAccountName = document.getElementById('topAccountName');
+                const topAccountMenu = document.getElementById('topAccountMenu');
+
+                if (isLoggedIn) {
+                    if (topLoginBtn) topLoginBtn.style.display = 'none';
+                    if (topAccountBtn) topAccountBtn.style.display = 'inline-block';
+                    if (topAccountName) topAccountName.textContent = userName;
+                } else {
+                    if (topLoginBtn) topLoginBtn.style.display = 'inline-block';
+                    if (topAccountBtn) topAccountBtn.style.display = 'none';
+                    if (topAccountMenu) { topAccountMenu.style.display = 'none'; topAccountMenu.setAttribute('aria-hidden', 'true'); }
+                }
+            }
+
+            // Toggle top account menu
+            const topAccountBtn = document.getElementById('topAccountBtn');
+            const topAccountMenu = document.getElementById('topAccountMenu');
+            if (topAccountBtn) {
+                topAccountBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    if (!topAccountMenu) return;
+                    const shown = topAccountMenu.style.display === 'block';
+                    topAccountMenu.style.display = shown ? 'none' : 'block';
+                    topAccountMenu.setAttribute('aria-hidden', shown ? 'true' : 'false');
+                });
+            }
+
+            // Close account menu when clicking outside
+            document.addEventListener('click', function(e) {
+                if (topAccountMenu && e.target !== topAccountMenu && !topAccountMenu.contains(e.target) && e.target !== topAccountBtn) {
+                    topAccountMenu.style.display = 'none';
+                    topAccountMenu.setAttribute('aria-hidden', 'true');
+                }
+            });
+
+            // Top login button opens same auth modal
+            const topLoginBtn = document.getElementById('topLoginBtn');
+            if (topLoginBtn) topLoginBtn.addEventListener('click', function(e) { e.preventDefault(); if (authModal) { authModal.style.display = 'block'; authOptions.style.display = 'block'; signupForm.style.display = 'none'; loginForm.style.display = 'none'; } });
+
+            // Payment modal handlers
+            const paymentModal = document.getElementById('paymentModal');
+            const paymentMethodsBtn = document.getElementById('paymentMethodsBtn');
+            const visaCardBtn = document.getElementById('visaCardBtn');
+            const closePaymentModal = document.getElementById('closePaymentModal');
+            const cardHolderNameEl = document.getElementById('cardHolderName');
+
+            function openPaymentModal() {
+                if (!paymentModal) return;
+                const name = localStorage.getItem('cardHolderName') || localStorage.getItem('userName') || '-';
+                if (cardHolderNameEl) cardHolderNameEl.textContent = name;
+                paymentModal.style.display = 'block';
+            }
+
+            function closePayment() {
+                if (paymentModal) paymentModal.style.display = 'none';
+            }
+
+            if (paymentMethodsBtn) paymentMethodsBtn.addEventListener('click', function(e) { e.preventDefault(); openPaymentModal(); });
+            if (visaCardBtn) visaCardBtn.addEventListener('click', function(e) { e.preventDefault(); openPaymentModal(); });
+            if (closePaymentModal) closePaymentModal.addEventListener('click', function() { closePayment(); });
+
+            // Merchant request button handler
+            const requestMerchantBtn = document.getElementById('requestMerchantBtn');
+            if (requestMerchantBtn) {
+                requestMerchantBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = 'merchant_request.html';
+                });
+            }
+            if (paymentModal) paymentModal.addEventListener('click', function(e) { if (e.target === paymentModal) closePayment(); });
+
+            // Logout
+            const logoutBtnTop = document.getElementById('logoutBtnTop');
+            if (logoutBtnTop) logoutBtnTop.addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userName');
+                localStorage.removeItem('cardHolderName');
+                updateAuthUI();
+                alert('تم تسجيل الخروج');
+            });
+
+            // Initialize auth UI
+            updateAuthUI();
+            
+            // --- Shopping Cart System ---
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            function addToCart(product) {
+                const existingItem = cart.find(item => item.name === product.name);
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    cart.push(product);
+                }
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartBadge();
+            }
+
+            function removeFromCart(productId) {
+                cart = cart.filter(item => item.id !== productId);
+                localStorage.setItem('cart', JSON.stringify(cart));
+            }
+
+            function updateCartBadge() {
+                const cartBadge = document.getElementById('cartBadge');
+                if (cartBadge) {
+                    cartBadge.textContent = cart.length;
+                }
+            }
+
+            function displayCart() {
+                const cartItemsContainer = document.getElementById('cartItemsContainer');
+                if (!cartItemsContainer) return;
+                cartItemsContainer.innerHTML = '';
+
+                if (cart.length === 0) {
+                    cartItemsContainer.innerHTML = '<div class="cart-empty">Your cart is empty</div>';
+                    return;
+                }
+
+                cart.forEach((item, index) => {
+                    const cartItem = document.createElement('div');
+                    cartItem.className = 'cart-item';
+                    cartItem.innerHTML = `
+                        <input type="checkbox" class="cart-item-checkbox" data-index="${index}" checked>
+                        <div class="cart-item-image">
+                            <img src="${item.image}" alt="${item.name}" style="max-width:100%; max-height:100%; object-fit:contain;">
+                        </div>
+                        <div class="cart-item-details">
+                            <div class="cart-item-name">${item.name}</div>
+                            <div class="cart-item-price">${item.price}</div>
+                            <div class="cart-item-quantity">
+                                <button class="qty-minus" data-index="${index}">−</button>
+                                <input type="number" class="qty-input" data-index="${index}" value="${item.quantity}" min="1" max="99">
+                                <button class="qty-plus" data-index="${index}">+</button>
+                            </div>
+                        </div>
+                        <div class="cart-item-actions">
+                            <button class="cart-item-remove" data-index="${index}">Remove</button>
+                        </div>
+                    `;
+                    cartItemsContainer.appendChild(cartItem);
+                });
+
+                // Attach event listeners
+                document.querySelectorAll('.cart-item-checkbox').forEach(checkbox => {
+                    checkbox.addEventListener('change', updateCartTotal);
+                });
+
+                document.querySelectorAll('.qty-minus').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = this.getAttribute('data-index');
+                        if (cart[index].quantity > 1) {
+                            cart[index].quantity -= 1;
+                            localStorage.setItem('cart', JSON.stringify(cart));
+                            displayCart();
+                        }
+                    });
+                });
+
+                document.querySelectorAll('.qty-plus').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = this.getAttribute('data-index');
+                        cart[index].quantity += 1;
+                        localStorage.setItem('cart', JSON.stringify(cart));
+                        displayCart();
+                    });
+                });
+
+                document.querySelectorAll('.qty-input').forEach(input => {
+                    input.addEventListener('change', function() {
+                        const index = this.getAttribute('data-index');
+                        const qty = parseInt(this.value) || 1;
+                        cart[index].quantity = Math.max(1, qty);
+                        localStorage.setItem('cart', JSON.stringify(cart));
+                        displayCart();
+                    });
+                });
+
+                document.querySelectorAll('.cart-item-remove').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const index = this.getAttribute('data-index');
+                        removeFromCart(cart[index].id);
+                        displayCart();
+                        updateCartBadge();
+                    });
+                });
+
+                updateCartTotal();
+            }
+
+            function updateCartTotal() {
+                const checkboxes = document.querySelectorAll('.cart-item-checkbox:checked');
+                let totalItems = 0;
+                let totalPrice = 0;
+
+                checkboxes.forEach(checkbox => {
+                    const index = checkbox.getAttribute('data-index');
+                    const item = cart[index];
+                    if (item) {
+                        totalItems += item.quantity;
+                        // Extract only the first number from price (e.g., from "₪99" get 99)
+                        const priceMatches = item.price.match(/\d+/);
+                        const price = priceMatches ? parseFloat(priceMatches[0]) : 0;
+                        totalPrice += price * item.quantity;
+                    }
+                });
+
+                document.getElementById('cartTotalItems').textContent = totalItems;
+                document.getElementById('cartTotalPrice').textContent = '₪' + totalPrice.toFixed(0);
+            }
+
+            // Wire cart button/badge to open cart modal
+            const cartBtn = document.querySelector('.flex .flex:has(i.fa-shopping-cart)');
+            const cartItems = document.querySelectorAll('.flex i.fa-shopping-cart');
+            
+            cartItems.forEach(cartIcon => {
+                const cartContainer = cartIcon.closest('.flex');
+                if (cartContainer) {
+                    cartContainer.style.cursor = 'pointer';
+                    cartContainer.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        var isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+                        if(!isLoggedIn){ showLoginPrompt(); return; }
+                        displayCart();
+                        document.getElementById('cartModal').style.display = 'block';
+                    });
+                }
+            });
+
+            const cartModal = document.getElementById('cartModal');
+            const closeCartModal = document.getElementById('closeCartModal');
+            const closeCartBtn = document.getElementById('closeCartBtn');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+
+            if (closeCartModal) closeCartModal.addEventListener('click', function() { if (cartModal) cartModal.style.display = 'none'; });
+            if (closeCartBtn) closeCartBtn.addEventListener('click', function() { if (cartModal) cartModal.style.display = 'none'; });
+            if (cartModal) cartModal.addEventListener('click', function(e) { if (e.target === cartModal) cartModal.style.display = 'none'; });
+
+            if (checkoutBtn) {
+                checkoutBtn.addEventListener('click', function() {
+                    const selectedItems = document.querySelectorAll('.cart-item-checkbox:checked');
+                    if (selectedItems.length === 0) {
+                        alert('Please select at least one item to checkout');
+                        return;
+                    }
+                    alert('Proceeding to checkout with ' + selectedItems.length + ' item(s)');
+                    // In a real app, redirect to checkout page
+                });
+            }
+
+            updateCartBadge();
+            
+            // Simulate countdown timer
+            function updateCountdown() {
+                const countdownElement = document.querySelector('.countdown');
+                if (!countdownElement) return;
+                
+                let time = countdownElement.textContent.match(/\d+/g);
+                if (!time || time.length < 3) return;
+                
+                let hours = parseInt(time[0]);
+                let minutes = parseInt(time[1]);
+                let seconds = parseInt(time[2]);
+                
+                seconds--;
+                if (seconds < 0) {
+                    seconds = 59;
+                    minutes--;
+                    if (minutes < 0) {
+                        minutes = 59;
+                        hours--;
+                        if (hours < 0) {
+                            hours = 23;
+                        }
+                    }
+                }
+                
+                const savedLang = localStorage.getItem('preferredLanguage') || 'ar';
+                const endsInText = translations[savedLang].endsIn;
+                countdownElement.textContent = `⏰ ${endsInText} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            setInterval(updateCountdown, 1000);
+        });
+    </script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+    (function(){
+        var map;
+        var statusColors = {
+            planning: '#ff7a00', // orange - planning/presence being established
+            active: '#10B981',   // green - present and active
+            restricted: '#ff0000' // red - difficult/restricted
+        };
+
+        // Sample areas array; start empty. Add areas dynamically via UI or programmatic API.
+        var areas = [];
+
+        var areaLayers = {}; // map feature id -> layer
+
+        function styleByStatus(status){
+            var c = statusColors[status] || statusColors.planning;
+            return { color: c, weight: 1, fillColor: c, fillOpacity: 0.5 };
+        }
+
+
+        function removeAreaById(id){
+            if(!id) return;
+            // remove from areas array (string-safe)
+            for(var i=areas.length-1;i>=0;i--){
+                try{
+                    var pid = areas[i] && areas[i].properties && areas[i].properties.id;
+                    if(pid != null && String(pid) === String(id)) areas.splice(i,1);
+                } catch(e){}
+            }
+
+            // remove stored layer(s) if present
+            var lay = areaLayers[id];
+            if(lay){
+                try{
+                    if(typeof lay.eachLayer === 'function'){
+                        lay.eachLayer(function(sub){ try{ map.removeLayer(sub); }catch(e){} });
+                    } else {
+                        try{ map.removeLayer(lay); }catch(e){}
+                    }
+                } catch(e){}
+                try{ delete areaLayers[id]; }catch(e){}
+                return;
+            }
+
+            // fallback: iterate map layers and remove any layer whose feature has matching id
+            try{
+                map.eachLayer(function(l){
+                    try{
+                        if(l && l.feature && l.feature.properties && String(l.feature.properties.id) === String(id)){
+                            map.removeLayer(l);
+                        }
+                    } catch(e){}
+                });
+            } catch(e){}
+        }
+
+        function onEachArea(feature, layer){
+            var id = feature.properties && feature.properties.id;
+            var name = feature.properties && feature.properties.name || 'Area';
+            var status = feature.properties && feature.properties.status || 'planning';
+            if(id) areaLayers[id] = layer;
+
+            // build popup HTML with action buttons
+            var popupHtml = '<div style="text-align:right;">' +
+                '<div style="font-weight:700;">' + name + '</div>' +
+                '<div style="margin:6px 0;">Status: <span class="area-status">' + status + '</span></div>' +
+                '<div style="display:flex; gap:6px; justify-content:flex-end;">' +
+                '<button class="cycle-status-btn btn btn-outline" data-id="' + id + '" style="padding:6px 8px;">Cycle Status</button>' +
+                '<button class="delete-area-btn btn" data-id="' + id + '" style="background:#ef4444; color:white; padding:6px 8px;">Delete</button>' +
+                '</div>' +
+                '</div>';
+
+            layer.bindPopup(popupHtml);
+
+            layer.on('click', function(e){
+                // open popup and attach handlers on popupopen
+                layer.openPopup();
+                // handlers attached via popupopen event below
+            });
+
+            layer.on('popupopen', function(){
+                var popupEl = layer.getPopup().getElement();
+                if(!popupEl) return;
+                var delBtn = popupEl.querySelector('.delete-area-btn');
+                var cycleBtn = popupEl.querySelector('.cycle-status-btn');
+                var statusSpan = popupEl.querySelector('.area-status');
+                if(cycleBtn){
+                    cycleBtn.addEventListener('click', function(){
+                        var order = ['planning','active','restricted'];
+                        var cur = (feature.properties.status || 'planning');
+                        var next = order[(order.indexOf(cur) + 1) % order.length];
+                        feature.properties.status = next;
+                        updateLayerStyle(layer, next);
+                        if(statusSpan) statusSpan.textContent = next;
+                    });
+                }
+                if(delBtn){
+                    delBtn.addEventListener('click', function(){
+                        var idToRemove = this.getAttribute('data-id');
+                        removeAreaById(idToRemove);
+                        map.closePopup();
+                    });
+                }
+            });
+        }
+
+        function updateLayerStyle(layer, status){
+            if(!layer) return;
+            var s = styleByStatus(status);
+            if(layer.setStyle) layer.setStyle(s);
+        }
+
+        function initMap(){
+            if(map) return;
+            map = L.map('map').setView([31.5,34.47], 11);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            // add areas
+            var anyLayerGroup = L.featureGroup();
+            areas.forEach(function(f){
+                var layer = L.geoJSON(f, { style: styleByStatus(f.properties.status), onEachFeature: onEachArea }).addTo(map);
+                // store reference(s)
+                // If geoJSON creates multiple layers, grab first
+                layer.eachLayer(function(l){
+                    anyLayerGroup.addLayer(l);
+                });
+            });
+
+            // fit map to areas if possible (safely check bounds)
+            var bounds = (anyLayerGroup && anyLayerGroup.getBounds) ? anyLayerGroup.getBounds() : null;
+            if (bounds && typeof bounds.isValid === 'function' && bounds.isValid()) {
+                map.fitBounds(bounds, { padding: [20,20] });
+            } else {
+                map.setView([31.5,34.47], 11);
+            }
+
+            // keep legend colors in sync (in case you want to update programmatically later)
+            var legend = document.getElementById('mapLegend');
+            if(legend){
+                // update only elements with the .swatch class
+                var swatches = legend.querySelectorAll('.swatch');
+                if(swatches.length >= 3){
+                    swatches[0].style.background = statusColors.planning;
+                    swatches[1].style.background = statusColors.active;
+                    swatches[2].style.background = statusColors.restricted;
+                }
+            }
+        }
+
+        // shadow feature storage
+        var shadowLayers = [];
+        var shadowMode = false;
+        var selectedShadowColor = '#ff7a00';
+        var selectedShadowRadius = 2000;
+
+        // expose a programmatic API (optional)
+        window.mapAreas = {
+            setStatus: function(id, status){
+                var layer = areaLayers[id];
+                if(layer){
+                    updateLayerStyle(layer, status);
+                    // update feature property if present
+                    if(layer.feature && layer.feature.properties) layer.feature.properties.status = status;
+                }
+            },
+            getAreas: function(){ return areas; }
+        };
+
+        // Shadow helpers
+        function addShadow(latlng, color, radius){
+            if(!map) return null;
+            var circle = L.circle(latlng, { color: color, fillColor: color, fillOpacity: 0.35, weight: 1, radius: radius }).addTo(map);
+            circle._shadowId = 's_' + Date.now() + '_' + Math.floor(Math.random()*1000);
+            shadowLayers.push(circle);
+            circle.bindPopup('<div style="text-align:right;">' +
+                '<div style="margin-bottom:6px; font-weight:700;">Shadow</div>' +
+                '<div style="margin-bottom:6px;"><button class="remove-shadow-btn btn btn-outline" style="padding:6px 8px;">Remove</button> <button class="change-shadow-color-btn btn" style="padding:6px 8px;">Change Color</button></div>' +
+                '</div>');
+            circle.on('popupopen', function(){
+                var popupEl = circle.getPopup().getElement();
+                if(!popupEl) return;
+                var removeBtn = popupEl.querySelector('.remove-shadow-btn');
+                var changeBtn = popupEl.querySelector('.change-shadow-color-btn');
+                if(removeBtn) removeBtn.addEventListener('click', function(){ removeShadow(circle); map.closePopup(); });
+                if(changeBtn) changeBtn.addEventListener('click', function(){
+                    var newColor = prompt('Enter hex color (e.g. #ff0000):', color) || color;
+                    circle.setStyle({ color: newColor, fillColor: newColor });
+                    // update default picker to new color
+                    var picker = document.getElementById('shadowColor'); if(picker) picker.value = newColor;
+                });
+            });
+            return circle;
+        }
+
+        function removeShadow(circle){
+            try {
+                map.removeLayer(circle);
+            } catch(e){}
+            shadowLayers = shadowLayers.filter(function(c){ return c !== circle; });
+        }
+
+        function clearAllShadows(){
+            shadowLayers.forEach(function(c){ try{ map.removeLayer(c); }catch(e){} });
+            shadowLayers = [];
+        }
+
+        var openBtn = document.getElementById('locationText');
+        var closeBtn = document.getElementById('closeMapModal');
+        var overlay = document.getElementById('mapModalOverlay');
+
+        openBtn && openBtn.addEventListener('click', function(e){
+            e.preventDefault();
+            document.getElementById('mapModal').style.display = 'block';
+            setTimeout(function(){ initMap(); map.invalidateSize(); }, 120);
+        });
+
+        // keyboard accessibility: open map with Enter or Space when focused
+        openBtn && openBtn.addEventListener('keydown', function(e){
+            if(e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar'){
+                e.preventDefault();
+                document.getElementById('mapModal').style.display = 'block';
+                setTimeout(function(){ initMap(); map.invalidateSize(); }, 120);
+            }
+        });
+
+        // Shadow UI wiring (after DOM elements exist)
+        var shadowColorInput = document.getElementById('shadowColor');
+        var shadowRadiusInput = document.getElementById('shadowRadius');
+        var toggleAddShadowBtn = document.getElementById('toggleAddShadowBtn');
+        var clearShadowsBtn = document.getElementById('clearShadowsBtn');
+
+        if(shadowColorInput) shadowColorInput.addEventListener('change', function(){ selectedShadowColor = this.value; });
+        if(shadowRadiusInput) shadowRadiusInput.addEventListener('change', function(){ var v = parseInt(this.value)||2000; selectedShadowRadius = Math.max(50, v); });
+
+        if(toggleAddShadowBtn){
+            toggleAddShadowBtn.addEventListener('click', function(){
+                shadowMode = !shadowMode;
+                this.textContent = shadowMode ? 'Exit Add Mode' : 'Add Shadow Mode';
+                this.classList.toggle('btn-primary', shadowMode);
+                this.setAttribute('aria-pressed', shadowMode ? 'true' : 'false');
+                // change map cursor when active
+                try {
+                    if(map && map.getContainer){
+                        map.getContainer().style.cursor = shadowMode ? 'crosshair' : '';
+                    }
+                } catch (e) {}
+            });
+        }
+
+        if(clearShadowsBtn){
+            clearShadowsBtn.addEventListener('click', function(){ if(confirm('Clear all shadows?')) clearAllShadows(); });
+        }
+
+        // map click adds shadow when in add mode
+        // guard in case map not initialized yet; attach after initMap called
+        var mapClickHandler = function(e){
+            if(!shadowMode) return;
+            var color = selectedShadowColor || (document.getElementById('shadowColor') && document.getElementById('shadowColor').value) || '#ff7a00';
+            var radius = selectedShadowRadius || (document.getElementById('shadowRadius') && parseInt(document.getElementById('shadowRadius').value)) || 2000;
+            addShadow(e.latlng, color, radius);
+        };
+
+        // attach click handler when map created
+        var origInit = initMap;
+        initMap = function(){
+            origInit();
+            if(map){
+                map.off('click', mapClickHandler);
+                map.on('click', mapClickHandler);
+            }
+        };
+
+        closeBtn && closeBtn.addEventListener('click', function(){ document.getElementById('mapModal').style.display='none'; });
+        overlay && overlay.addEventListener('click', function(){ document.getElementById('mapModal').style.display='none'; });
+    })();
+
+    // Search Routing Functionality
+    (function() {
+        // Define available products with their URLs
+        const products = [
+            { name: "iphone 14", url: "#product-iphone-14" },
+            { name: "samsung s23", url: "#product-samsung-s23" },
+            { name: "laptop dell", url: "#product-dell-laptop" },
+            { name: "سماعة بلوتوث", url: "#product-bluetooth-headphones" },
+            { name: "ساعة ذكية", url: "#product-smartwatch" },
+            { name: "شاحن سريع", url: "#product-fast-charger" },
+            { name: "كاميرا", url: "#product-camera" },
+            { name: "لابتوب", url: "#product-laptop" },
+            { name: "تابلت", url: "#product-tablet" },
+            { name: "سماعة", url: "#product-headphones" }
+        ];
+
+        // Get search form elements
+        const searchForm = document.getElementById('searchForm');
+        const searchInput = document.getElementById('searchInput');
+
+        if (searchForm && searchInput) {
+            searchForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const query = searchInput.value.trim().toLowerCase();
+                
+                // Try to find exact match first
+                let product = products.find(p => p.name === query);
+                
+                // If no exact match, try partial match
+                if (!product) {
+                    product = products.find(p => p.name.includes(query) || query.includes(p.name));
+                }
+                
+                if (product) {
+                    // Product found - navigate to product page
+                    window.location.href = product.url;
+                    alert(`تم العثور على المنتج: ${product.name}`);
+                } else {
+                    // Product not found - show not found message
+                    alert('عذراً، لم يتم العثور على المنتج الذي تبحث عنه.');
+                }
+            });
+        }
+    })();
+    </script>
+</body>
+</html>
